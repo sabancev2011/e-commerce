@@ -1,19 +1,38 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsEmail, IsNotEmpty, IsString } from "class-validator"
+import { $Enums, User } from "@prisma/client"
+import { IsArray, IsDate, IsEmail, IsUUID } from "class-validator"
 
-export class CreateUserDto {
+export class UserEntity implements User {
+
+    @ApiProperty({
+        example: '5b7eb78e-907d-4b69-9d9f-1b18e7ac9398'
+    })
+    @IsUUID()
+    id: string
 
     @ApiProperty({
         example: 'example@example.com'
     })
-    @IsNotEmpty()
     @IsEmail()
     email: string
 
     @ApiProperty({
-        example: 'password123'
+        example: '2024-02-25T09:45:08.746Z'
     })
-    @IsNotEmpty()
-    @IsString()
-    password: string
+    @IsDate()
+    createdAt: Date
+
+    @ApiProperty({
+        example: '2024-02-25T09:45:08.746Z'
+    })
+    @IsDate()
+    updatedAt: Date
+
+    @ApiProperty({
+        example: ["USER"]
+    })
+    @IsArray()
+    roles: $Enums.Role[]
+
+    password: string;
 }

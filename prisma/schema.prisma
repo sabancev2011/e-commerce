@@ -8,24 +8,26 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  roles     Role[]   @default([USER])
-  token     Token[]
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String        @unique
+  password     String        
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  roles        Role[]        @default([USER])
+  refreshToken RefreshToken[]
 
   @@map("users")
 }
 
-model Token {
-  token  String   @unique
-  exp    DateTime
-  user   User     @relation(fields: [userId], references: [id])
-  userId String   @db.Uuid
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.Uuid
+  exp       DateTime
+  userAgent String   @map("user_agent")
 
-  @@map("tokens")
+  @@map("refresh_tokens")
 }
 
 enum Role {

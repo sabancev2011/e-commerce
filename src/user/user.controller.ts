@@ -1,25 +1,56 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto.ts';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Auth } from '../auth/dto.ts';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserEntity } from './dto.ts';
+import { PasswordDeleteInterceptor } from 'src/interceptors/password.delete.interceptor';
+import { Roles, User } from 'src/decorators';
+import { JwtPayload } from 'src/interfaces';
+import { Role } from '@prisma/client';
 
-@ApiTags('user')
+@ApiTags('user-controller')
+@UseInterceptors(PasswordDeleteInterceptor)
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
-  @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-        return this.userService.create(createUserDto)
+  @Post('create')
+  @ApiOperation({ summary: 'Create' })
+  @HttpCode(HttpStatus.OK)
+  @ApiCreatedResponse({
+    type: UserEntity,
+  })
+  createUser(@Body() auth: Auth) {
+    return this.userService.create(auth)
+  }
+
+  @Get('find')
+  @ApiOperation({ summary: 'Find' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    type: [UserEntity]
+  })
+  findUsers() {
+    return this.userService.find()
   }
 
   @Get(':id')
-  getUser(@Param('id', ParseUUIDPipe) id: string) {
+  @ApiOperation({ summary: 'Find by id' })
+  @ApiOkResponse({
+    type: UserEntity
+  })
+  findUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.userService.findById(id)
   }
 
-  @Delete(':id')
-  deleteUser(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userService.delete(id)
+  @Roles(Role.ADMIN)
+  @Delete(':id/delete')
+  @ApiOperation({ summary: 'Delete' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    type: UserEntity
+  })
+  deleteUser(@Param('id', ParseUUIDPipe) id: string, @User() currentUser: JwtPayload) {
+    return this.userService.delete(id, currentUser)
   }
 }
