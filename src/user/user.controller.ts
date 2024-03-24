@@ -3,13 +3,13 @@ import { UserService } from './user.service';
 import { Auth } from '../auth/dto.ts';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './dto.ts';
-import { PasswordDeleteInterceptor } from 'src/interceptors/password.delete.interceptor';
+import { ResponsePayloadSanitizationInterceptor } from 'src/interceptors';
 import { Roles, User } from 'src/decorators';
 import { JwtPayload } from 'src/interfaces';
 import { Role } from '@prisma/client';
 
 @ApiTags('user-controller')
-@UseInterceptors(PasswordDeleteInterceptor)
+@UseInterceptors(ResponsePayloadSanitizationInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
