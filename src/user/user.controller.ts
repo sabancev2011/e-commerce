@@ -1,8 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
-import { Auth } from '../auth/dto.ts';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserEntity } from './dto.ts';
+import { UserCreateModel, UserModel, UserUpdateModel } from './dto.ts';
 import { ResponsePayloadSanitizationInterceptor } from 'src/interceptors';
 import { Roles, User } from 'src/decorators';
 import { JwtPayload } from 'src/interfaces';
@@ -18,17 +17,17 @@ export class UserController {
   @ApiOperation({ summary: 'Create' })
   @HttpCode(HttpStatus.OK)
   @ApiCreatedResponse({
-    type: UserEntity,
+    type: UserModel,
   })
-  createUser(@Body() auth: Auth) {
-    return this.userService.create(auth)
+  createUser(@Body() user: UserCreateModel) {
+    return this.userService.create(user)
   }
 
   @Get('find')
   @ApiOperation({ summary: 'Find' })
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
-    type: [UserEntity]
+    type: [UserModel]
   })
   findUsers() {
     return this.userService.find()
@@ -37,10 +36,20 @@ export class UserController {
   @Get(':id')
   @ApiOperation({ summary: 'Find by id' })
   @ApiOkResponse({
-    type: UserEntity
+    type: UserModel
   })
   findUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.userService.findById(id)
+  }
+
+  @Put(':id/update')
+  @ApiOperation({ summary: 'Update' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    type: UserModel
+  })
+  updateUser(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserModel: UserUpdateModel) {
+    return this.userService.update(id, updateUserModel)
   }
 
   @Roles(Role.ADMIN)
@@ -48,7 +57,7 @@ export class UserController {
   @ApiOperation({ summary: 'Delete' })
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
-    type: UserEntity
+    type: UserModel
   })
   deleteUser(@Param('id', ParseUUIDPipe) id: string, @User() currentUser: JwtPayload) {
     return this.userService.delete(id, currentUser)

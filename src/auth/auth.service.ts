@@ -1,4 +1,4 @@
-import { compareSync, genSaltSync, hashSync } from 'bcrypt';
+import { compareSync } from 'bcrypt';
 import { $Enums } from '@prisma/client';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { Auth, Tokens } from './dto.ts';
+import { AuthSigninModel, AuthSignupModel } from './dto.ts';
 import { UserService } from '../user/user.service.js';
 import { JwtPayload } from 'src/interfaces';
 
@@ -19,7 +19,7 @@ export class AuthService {
         private readonly userService: UserService
     ) { }
 
-    private async getTokens(userId: string, email: string, roles: $Enums.Role[]): Promise<Tokens> {
+    private async getTokens(userId: string, email: string, roles: $Enums.Role[]) {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync({
                 sub: userId,
@@ -78,20 +78,20 @@ export class AuthService {
         return setedToken
     }
 
-    async signup(dto: Auth, res: Response, userAgent: string) {
-        const user = await this.userService.create(dto);
+    async signup(auth: AuthSignupModel, res: Response, userAgent: string) {
+        const user = await this.userService.create(auth);
         const { access_token, refresh_token } = await this.getTokens(user.id, user.email, user.roles)
         await this.setRefreshToken(user.id, refresh_token, userAgent, res)
         return { access_token }
     }
 
-    async signin(dto: Auth, res: Response, userAgent: string) {
+    async signin(auth: AuthSigninModel, res: Response, userAgent: string) {
         const user = await this.prismaService.user.findUnique({
             where: {
-                email: dto.email
+                email: auth.email
             }
         })
-        if (!user || !compareSync(dto.password, user.password)) {
+        if (!user || !compareSync(auth.password, user.password)) {
             throw new UnauthorizedException('Incorrect login or password')
         }
         const { access_token, refresh_token } = await this.getTokens(user.id, user.email, user.roles)

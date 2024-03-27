@@ -1,9 +1,9 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Auth, Tokens } from './dto.ts';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { JwtAccessAuthGuard, JwtRefreshAuthGuard } from '../guards';
-import { Request, Response } from 'express';
+import { AuthSigninModel, AuthSignupModel, TokenResponse } from './dto.ts';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtRefreshAuthGuard } from '../guards';
+import { Response } from 'express';
 import { Cookie, Public, User, UserAgent } from 'src/decorators';
 import { JwtPayload } from 'src/interfaces';
 
@@ -17,28 +17,28 @@ export class AuthController {
   @ApiOperation({ summary: 'Signup' })
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
-    type: Tokens
+    type: TokenResponse
   })
   signup(
-    @Body() authDto: Auth, 
+    @Body() auth: AuthSignupModel, 
     @Res({ passthrough: true }) res: Response, 
     @UserAgent() userAgent: string
     ) {
-    return this.authService.signup(authDto, res, userAgent)
+    return this.authService.signup(auth, res, userAgent)
   }
 
   @Post('signin')
   @ApiOperation({ summary: 'Signin' })
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
-    type: Tokens,
+    type: TokenResponse,
   })
   signin(
-    @Body() authDto: Auth, 
+    @Body() auth: AuthSigninModel, 
     @Res({ passthrough: true }) res: Response, 
     @UserAgent() userAgent: string
     ) {
-    return this.authService.signin(authDto, res, userAgent)
+    return this.authService.signin(auth, res, userAgent)
   }
 
   @UseGuards(JwtRefreshAuthGuard)
@@ -47,7 +47,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh tokens' })
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
-    type: Tokens
+    type: TokenResponse
   })
   refreshTokens(
     @Cookie('refresh_token') refreshToken: string, 
